@@ -16,6 +16,10 @@ Graphs.add_edge!(g, Graphs.SimpleEdge(1, 2))
 @test Graphs.has_edge(g, 1, 2)
 @test !Graphs.has_edge(g, 2, 3)
 @test Graphs.has_edge(g, 1, 2) isa Bool
+@test Graphs.has_edge(g, Graphs.SimpleEdge(1, 2))
+@test !Graphs.has_edge(g, Graphs.SimpleEdge(2, 3))
+@test Graphs.has_edge(g, (1, 2))
+@test all(Graphs.has_edge(g, e) for e in Graphs.edges(Graphs.SimpleGraph(g)))
 for (s, d) in ((0, 1), (1, 4), (4, 1), (1, 100))
     @test !Graphs.has_edge(g, s, d)
 end
