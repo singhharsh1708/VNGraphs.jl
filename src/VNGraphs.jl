@@ -107,7 +107,8 @@ Base.eltype(::VNGraph) = Cuint
 Base.zero(::Type{VNGraph}) = VNGraph(0)
 # Graphs.edges # TODO
 Graphs.edgetype(g::VNGraph) = Graphs.SimpleGraphs.SimpleEdge{eltype(g)}
-Graphs.has_edge(g::VNGraph,s,d) = graph_has_edge(g,s,d)
+Graphs.has_edge(g::VNGraph,s,d) =
+    Graphs.has_vertex(g,s) && Graphs.has_vertex(g,d) && !iszero(graph_has_edge(g,s-1,d-1))
 Graphs.has_vertex(g::VNGraph,n::Integer) = 1≤n≤nnodes(g)
 # Graphs.inneighbors # TODO
 Graphs.is_directed(::Type{VNGraph}) = false
