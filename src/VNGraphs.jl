@@ -116,6 +116,24 @@ Graphs.nv(g::VNGraph) = nnodes(g)
 # Graphs.outneighbors # TODO
 Graphs.vertices(g::VNGraph) = 1:nnodes(g)
 
-Graphs.add_edge!(g::VNGraph, e::Graphs.SimpleGraphEdge) = graph_add_edge(g,e.src-1,e.dst-1)
+function Graphs.add_edge!(g::VNGraph, e::Graphs.SimpleGraphEdge)
+    s, d = Graphs.src(e), Graphs.dst(e)
+    (Graphs.has_vertex(g, s) && Graphs.has_vertex(g, d)) || return false
+    before = nedges(g)
+    graph_add_edge(g, s - one(s), d - one(d))
+    return nedges(g) != before
+end
+
+function Graphs.rem_edge!(g::VNGraph, e::Graphs.SimpleGraphEdge)
+    s, d = Graphs.src(e), Graphs.dst(e)
+    (Graphs.has_vertex(g, s) && Graphs.has_vertex(g, d)) || return false
+    return !iszero(graph_del_edge(g, s - one(s), d - one(d)))
+end
+
+function Graphs.add_vertex!(g::VNGraph)
+    nnodes(g) == typemax(Cuint) && return false
+    graph_add_node(g)
+    return true
+end
 
 end
