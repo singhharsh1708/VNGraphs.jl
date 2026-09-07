@@ -103,9 +103,33 @@ function VNGraph(g::Graphs.AbstractSimpleGraph)
     return vng
 end
 
+struct VNEdgeIter <: Graphs.AbstractEdgeIter
+    g::VNGraph
+end
+
+Base.eltype(::Type{VNEdgeIter}) = Graphs.SimpleGraphs.SimpleEdge{Cuint}
+Base.length(it::VNEdgeIter) = Int(nedges(it.g))
+Base.show(io::IO, it::VNEdgeIter) = print(io, "VNEdgeIter ", length(it))
+Base.in(e::Graphs.SimpleGraphEdge, it::VNEdgeIter) =
+    Graphs.has_vertex(it.g, Graphs.src(e)) &&
+    insorted(Graphs.dst(e), Graphs.outneighbors(it.g, Graphs.src(e)))
+
+function Base.iterate(it::VNEdgeIter, state=(zero(Cuint), Cuint[], 1))
+    g = it.g
+    u, ns, i = state
+    n = nnodes(g)
+    while i > length(ns)
+        u == n && return nothing
+        u += one(u)
+        ns = Graphs.outneighbors(g, u)
+        i = searchsortedfirst(ns, u)
+    end
+    return Graphs.SimpleGraphs.SimpleEdge{Cuint}(u, ns[i]), (u, ns, i + 1)
+end
+
 Base.eltype(::VNGraph) = Cuint
 Base.zero(::Type{VNGraph}) = VNGraph(0)
-# Graphs.edges # TODO
+Graphs.edges(g::VNGraph) = VNEdgeIter(g)
 Graphs.edgetype(g::VNGraph) = Graphs.SimpleGraphs.SimpleEdge{eltype(g)}
 Graphs.has_edge(g::VNGraph,s,d) = graph_has_edge(g,s,d)
 Graphs.has_vertex(g::VNGraph,n::Integer) = 1≤n≤nnodes(g)
