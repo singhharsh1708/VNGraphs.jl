@@ -1,6 +1,6 @@
 module VNGraphs
 
-export VNGraph
+export VNGraph, VNAlgorithm
 
 import Graphs
 
@@ -117,5 +117,22 @@ Graphs.nv(g::VNGraph) = nnodes(g)
 Graphs.vertices(g::VNGraph) = 1:nnodes(g)
 
 Graphs.add_edge!(g::VNGraph, e::Graphs.SimpleGraphEdge) = graph_add_edge(g,e.src-1,e.dst-1)
+
+"""Select the `very_nauty` implementation of an operation that Graphs.jl also defines."""
+struct VNAlgorithm end
+
+const VN_LOCK = ReentrantLock()
+
+function Graphs.clique_number(g::VNGraph, ::VNAlgorithm)
+    lock(VN_LOCK) do
+        Int(graph_clique_number(g))
+    end
+end
+
+function Graphs.clique_number(g::Graphs.AbstractSimpleGraph, alg::VNAlgorithm)
+    Graphs.is_directed(g) &&
+        throw(ArgumentError("clique_number is defined for undirected graphs only"))
+    return Graphs.clique_number(VNGraph(g), alg)
+end
 
 end
