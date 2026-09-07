@@ -109,11 +109,21 @@ Base.zero(::Type{VNGraph}) = VNGraph(0)
 Graphs.edgetype(g::VNGraph) = Graphs.SimpleGraphs.SimpleEdge{eltype(g)}
 Graphs.has_edge(g::VNGraph,s,d) = graph_has_edge(g,s,d)
 Graphs.has_vertex(g::VNGraph,n::Integer) = 1≤n≤nnodes(g)
-# Graphs.inneighbors # TODO
+Graphs.inneighbors(g::VNGraph, v::Integer) = Graphs.outneighbors(g, v)
 Graphs.is_directed(::Type{VNGraph}) = false
 Graphs.ne(g::VNGraph) = nedges(g)
 Graphs.nv(g::VNGraph) = nnodes(g)
-# Graphs.outneighbors # TODO
+function Graphs.outneighbors(g::VNGraph, v::Integer)
+    Graphs.has_vertex(g, v) || throw(BoundsError(g, v))
+    ns = Vector{Cuint}(undef, g.ptr.d[][v])
+    GC.@preserve g begin
+        a = g.ptr.a[][v]
+        for k in eachindex(ns)
+            ns[k] = a[k] + one(Cuint)
+        end
+    end
+    return unique!(sort!(ns))
+end
 Graphs.vertices(g::VNGraph) = 1:nnodes(g)
 
 Graphs.add_edge!(g::VNGraph, e::Graphs.SimpleGraphEdge) = graph_add_edge(g,e.src-1,e.dst-1)
